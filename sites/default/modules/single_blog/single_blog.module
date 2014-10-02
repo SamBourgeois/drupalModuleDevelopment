@@ -1,0 +1,24 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Enables a single-user blog.
+ */
+
+define('SINGLE_BLOG_NODE_TYPE', 'article');
+define('SINGLE_BLOG_LIST_COUNT', 3);
+
+/**
+ * Returns a list of blog entries
+ * 
+ * @param $number
+ *   The number of blog entries to return.
+ * @return
+ *   A result set object containing the list of blog entries.
+ */
+
+function single_blog_list($number) {
+	//Use the database API to retrieve our data.
+	// @see http://drupal.org/node/310069
+}

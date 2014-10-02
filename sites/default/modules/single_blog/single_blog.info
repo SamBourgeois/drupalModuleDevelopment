@@ -1,0 +1,7 @@
+;$Id$
+
+name = Single blog
+description = Enables a signle blog for an individual or multiple users.
+
+core = 7.x
+package = single_blog.module
