@@ -1,7 +1,7 @@
 ;$Id$
 
 name = Single blog
-description = Enables a signle blog for an individual or multiple users.
+description = Enables a single blog for an individual or multiple users.
+package = Drupal 7 Development
 
 core = 7.x
-package = single_blog.module
