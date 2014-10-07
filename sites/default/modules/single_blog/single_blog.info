@@ -3,5 +3,8 @@
 name = Single blog
 description = Enables a single blog for an individual or multiple users.
 package = Drupal 7 Development
-
+files[] = single_blog.module
+files[] = single-blog.css
+files[] = single-blog.rtl.css
+files[] = single-blog-block-item.tpl.php
 core = 7.x

@@ -111,7 +111,7 @@ function single_blog_block_view($delta = '') {
  * data is themed.
  */
 function single_blog_item_list_child_render($elements) {
-  foreach (array_keys($elements['#items']) as $key) {
+  foreach (array_keys($elements['#items']) AS $key) {
     // Taka the renderable array that we set in
     // single_blog_block_view() and render it into the string
     // that theme_item_list() expects.
