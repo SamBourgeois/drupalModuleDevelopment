@@ -172,7 +172,7 @@ function artwork_page_view($artwork, $view_mode = 'full') {
   field_attach_prepare_view('artwork', array($artwork->aid => $artwork), $view_mode);
   entity_prepare_view('artwork', array($artwork->aid => $artwork));
   $artwork->content += field_attach_view('artwork', $artwork, $view_mode);
-  
+
   return $artwork->content;
 }
 

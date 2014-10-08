@@ -4,7 +4,7 @@
 /**
  * @file
  * A module exemplifying Drupal coding practices and APIs.
- * 
+ *
  * This module provides  block that lists all of the installed modules.
  * It illustrates coding standards, practices, and API use for Drupal 7.
  */
@@ -37,14 +37,40 @@ function first_block_info() {
  */
 function first_block_view($block_name = '') {
   if ($block_name == 'list_modules') {
-    $list = module_list();
-
+    /*$list = module_list();
     $theme_args = array('items' => $list, 'type' => 'ol');
     $content = theme('item_list', $theme_args);
 
     $block = array(
       'subject' => t('Enabled Modules'),
       'content' => $content,
+    );
+
+    return $block;*/
+
+    $list_modules_function = 'system_rebuild_module_data';
+    $output = "<dl>\n";
+    $list_modules = $list_modules_function();
+
+    foreach ($list_modules as $module) {
+      if ($module->info["package"] == "Drupal 7 Development") {
+        $output .= "<dt><strong>" . check_plain($module->info["name"]) . "</strong></dt>\n";
+        $output .= "<dd>" . check_plain($module->info["description"]) . "</dd>\n";
+        $files = "<dl>\n";
+        $files .= "<dt>Files:</dt>\n";
+        foreach ($module->info["files"] as $file) {
+          $files .= "<dd>" . check_plain($file) . "</dd>\n";
+        }
+        $files .= "</dl>\n";
+        $output .= "<dd>" . $files . "</dd>\n";
+      }
+    }
+
+    $output .= "</dl>\n";
+
+    $block = array(
+      'subject' => t('Drupal 7 Module Development'),
+      'content' => $output,
     );
 
     return $block;
