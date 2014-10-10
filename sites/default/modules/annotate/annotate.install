@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * Implements hook_install()
+ */
+function annotate_install() {
+// Check to see if annotation field exists.
+  $field = field_info_field('annotation');
+// if the annotation field does not exist then create it
+  if (empty($field)) {
+    $field = array(
+      'field_name' => 'annotation',
+      'type' => 'text_with_summary',
+      'entity_types' => array('node'),
+      'translatable' => TRUE,
+    );
+    $field = field_create_field($field);
+  }
+}

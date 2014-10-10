@@ -221,7 +221,6 @@ function artwork_page_list_recent() {
   $query
     ->entityCondition('entity_type', 'artwork')
     ->propertyOrderBy('created', 'DESC')
-    ->fieldCondition('field_artist', 'value', 'Da Vinci', 'CONTAINS', 0)
     ->range(0, 5);
   $result = $query->execute();
 
@@ -229,6 +228,6 @@ function artwork_page_list_recent() {
   foreach ($artworks as $artwork) {
     $content[$artwork->aid] = artwork_page_view($artwork, 'teaser');
   }
-
   return $content;
+
 }

@@ -5,37 +5,39 @@
  */
 function dimfield_field_info() {
   return array(
-    'label' => t('Dimensions'),
-    'description' => t('This field stores a height and width, and depth.'),
-    'settings' => array('num_dimensions' => 2),
-    'instance_settings' => array(
-      'max_height' => 0,
-      'max_width' => 0,
-      'max_depth' => 0,
+    'dimensions' => array(
+      'label' => t('Dimensions'),
+      'description' => t('This field stores a height and width, and possibly depth.'),
+      'settings' => array('num_dimensions' => 2),
+      'instance_settings' => array(
+        'max_height' => 0,
+        'max_width' => 0,
+        'max_depth' => 0,
+      ),
+      'default_widget' => 'dimfield_combined',
+      'default_formatter' => 'dimfield_default',
     ),
-    'default_widget' => 'dimfield_combined',
-    'default_formatter' => 'diemfield_default',
   );
 }
+
 /**
  * Implements hook_field_validate().
+ *
+ * Pseudo-hook.
  */
-function dimfield_field_validate($obj_type, $object, $field, $instance,
-                                  $langcode, &$items, &$errors) {
-  if ($field['type'] == 'dimensions')'' {
+function dimfield_field_validate($obj_type, $object, $field, $instance, $langcode, &$items, &$errors) {
+  if ($field['type'] == 'dimensions') {
     $columns = array(
-      'height' => 'max_height',
-      'width' => 'max_width',
+     'height' => 'max_height',
+     'width' => 'max_width',
     );
     if ($field['settings']['num_dimensions'] == 3) {
       $columns['depth'] = 'max_depth';
     }
     foreach ($items as $delta => $item) {
       foreach ($columns as $column => $max_key) {
-        if ($instance['settings'][$max_key]
-            && !empty($item[$column])
-            && $item[$column] > $instance['settings'][$max_key]) {
-          $errors[$fiel['field_name']][$delta][] = array(
+        if ($instance['settings'][$max_key] && !empty($item[$column]) && $item[$column] > $instance['settings'][$max_key]) {
+          $errors[$field['field_name']][$delta][] = array(
             'error' => 'dimfield_' . $max_key,
             'message' => t('%name: The %column may not be larger than %max.', array(
               '%column' => $column,
@@ -51,11 +53,12 @@ function dimfield_field_validate($obj_type, $object, $field, $instance,
 
 /**
  * Implements hook_field_is_empty().
+ *
+ * Pseudo-hook.
  */
 function dimfield_field_is_empty($item, $field) {
   if ($field['type'] == 'dimensions') {
-    if (empty($item['height']) && empty($item['width']) &&
-      ($field['settings']['num_dimensions'] == 2 || empty($item['depth']))) {
+    if (empty($item['height']) && empty($item['width']) && ($field['settings']['num_dimensions'] == 2 || empty($item['depth']))) {
       return TRUE;
     }
   }
@@ -64,10 +67,12 @@ function dimfield_field_is_empty($item, $field) {
 
 /**
  * Implements hook_field_settings_form().
+ *
+ * Pseudo-hook.
  */
 function dimfield_field_settings_form($field, $instance, $has_data) {
   if ($field['type'] == 'dimensions') {
-    $settings = field['settings'];
+    $settings = $field['settings'];
     $form['num_dimensions'] = array(
       '#type' => 'select',
       '#title' => t('How many dimensions'),
@@ -83,8 +88,47 @@ function dimfield_field_settings_form($field, $instance, $has_data) {
   }
 }
 
+/**
+ * Implements hook_field_settings_form().
+ *
+ * Pseudo-hook.
+ */
+function dimfield_field_instance_settings_form($field, $instance) {
+  $settings = $instance['settings'];
+
+  if ($field['type'] == 'dimensions') {
+    $form['max_height'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Max height'),
+      '#size' => 10,
+      '#default_value' => $settings['max_height'],
+      '#description' => t('The largest allowed value for the height. Use 0 for no limit.'),
+    );
+    $form['max_width'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Max width'),
+      '#size' => 10,
+      '#default_value' => $settings['max_width'],
+      '#description' => t('The largest allowed value for the width. Use 0 for no limit.'),
+    );
+
+    if ($field['settings']['num_dimensions'] == 3) {
+      $form['max_depth'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Max depth'),
+        '#size' => 10,
+        '#default_value' => $settings['max_depth'],
+        '#description' => t('The largest allowed value for the depth. Use 0 for no limit.'),
+      );
+    }
+  }
+
+  return $form;
+}
+
 
 ///////////////// Widgets ///////////////////////
+
 
 /**
  * Implements hook_widget_info().
@@ -92,8 +136,8 @@ function dimfield_field_settings_form($field, $instance, $has_data) {
 function dimfield_field_widget_info() {
   return array(
     'dimfield_simple' => array(
-      'label' => t('Seperate text fields'),
-      'description' => t('Allow the user to enter each dimension seperately.'),
+      'label' => t('Separate text fields'),
+      'description' => t('Allow the user to enter each dimension separately.'),
       'field types' => array('dimensions'),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_DEFAULT,
@@ -115,6 +159,8 @@ function dimfield_field_widget_info() {
 
 /**
  * Implements hook_field_widget_settings_form().
+ *
+ * Pseudo-hook.
  */
 function dimfield_field_widget_settings_form($field, $instance) {
   $form = array();
@@ -137,43 +183,40 @@ function dimfield_field_widget_settings_form($field, $instance) {
 
 /**
  * Implements hook_field_widget_form().
+ *
+ * Pseudo-hook.
  */
-function dimfield_field_widget_form(&$form, $&form_state, $field, $instance,
-                                    $langcode, $items, $delta, $element) {
+function dimfield_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $base = $element;
 
-  if($instance['widget']['type'] == 'dimfield_simple') {
+  if ($instance['widget']['type'] == 'dimfield_simple') {
     $element['height'] = array(
       '#type' => 'textfield',
       '#title' => t('Height'),
-      '#default_value' => isset($items[$delta]['height']) ?
-                            $items[$delta]['height'] : NULL,
+      '#default_value' => isset($items[$delta]['height']) ? $items[$delta]['height'] : NULL,
     ) + $base;
     $element['width'] = array(
       '#type' => 'textfield',
       '#title' => t('Width'),
-      '#default_value' => isset($items[$delta]['width']) ?
-                            $items[$delta]['width'] : NULL,
+      '#default_value' => isset($items[$delta]['width']) ? $items[$delta]['width'] : NULL,
     ) + $base;
 
     if ($field['settings']['num_dimensions'] == 3) {
-      $element['width'] = array(
+      $element['depth'] = array(
         '#type' => 'textfield',
         '#title' => t('Depth'),
-        '#default_value' => isset($items[$delta]['depth']) ?
-                              $items[$delta]['depth'] : NULL,
+        '#default_value' => isset($items[$delta]['depth']) ? $items[$delta]['depth'] : NULL,
       ) + $base;
     }
 
     $element['units'] = array(
       '#type' => 'select',
       '#title' => t('Units'),
-      '#default_value' => isset($items[$delta]['units']) ?
-                            $items[$delta]['units'] : NULL,
+      '#default_value' => isset($items[$delta]['units']) ? $items[$delta]['units'] : NULL,
       '#options' => dimfield_units(),
     ) + $base;
   }
-  esleif ($instance['widget']['type'] == 'dimfield_combined') {
+  elseif ($instance['widget']['type'] == 'dimfield_combined') {
     $element['#element_validate'] = array('_dimfield_combined_validate');
 
     $default = NULL;
@@ -190,12 +233,13 @@ function dimfield_field_widget_form(&$form, $&form_state, $field, $instance,
     $element['dimfield_combined_wrapper']['#theme'] = 'dimfield_combined_wrapper';
     $element['dimfield_combined_wrapper']['#attached']['css'][] = drupal_get_path('module', 'dimfield') . '/dimfield-admin.css';
 
-    $element['dimfield_combined_wrapper']['height_width_depth'] = array(
+    $element['dimfield_combined_wrapper']['height_width_depth'] =  array(
       '#title' => t('Dimensions (separated by x)'),
       '#type' => 'textfield',
       '#default_value' => $default,
       '#size' => $instance['widget']['settings']['size'],
     ) + $base;
+
     $element['dimfield_combined_wrapper']['units'] = array(
       '#type' => 'select',
       '#title' => t('Units'),
@@ -208,8 +252,8 @@ function dimfield_field_widget_form(&$form, $&form_state, $field, $instance,
 }
 
 /**
-* Implements hook_theme().
-*/
+ * Implements hook_theme().
+ */
 function dimfield_theme() {
   return array(
     'dimfield_combined_wrapper' => array(
@@ -217,11 +261,12 @@ function dimfield_theme() {
     ),
   );
 }
+
 /**
-* Theme function for the combined_wrapper widget.
-*
-* @ingroup themeable
-*/
+ * Theme function for the combined_wrapper widget.
+ *
+ * @ingroup themeable
+ */
 function theme_dimfield_combined_wrapper($variables) {
   $element = $variables['element'];
 
@@ -239,14 +284,14 @@ END;
 function _dimfield_combined_validate($element, &$form_state) {
   // This function is also called when submitting the field configuration form.
   // If so, skip validation as it won't work anyway.
-
   if ($form_state['complete form']['#form_id'] == 'field_ui_field_edit_form') {
     return;
   }
 
   $values = $form_state['values'];
-  $language = $values['language'];
+  $language = $element['#language'];
   $field_name = $element['#field_name'];
+  $item = $values[$field_name][$language][$element['#delta']]['dimfield_combined_wrapper'];
 
   $num_dimensions = 2;
   if (array_search('depth', $element['#columns'])) {
@@ -283,11 +328,158 @@ function _dimfield_combined_validate($element, &$form_state) {
 
 ///////////////// Formatters ///////////////////////
 
+/**
+ * Implements hook_field_formatter_info().
+ */
+function dimfield_field_formatter_info() {
+  return array(
+    'dimfield_default' => array(
+      'label' => t('Default'),
+      'field types' => array('dimensions'),
+    ),
+    'dimfield_table' => array(
+      'label' => t('Show as table'),
+      'field types' => array('dimensions'),
+      'settings' => array('units_as' => 'column'),
+    ),
+  );
+}
 
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function dimfield_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = '';
+
+  if ($display['type'] == 'dimfield_table') {
+    if ($settings['units_as'] == 'column') {
+      $summary = t('Show units as their own column');
+    }
+    else if ($settings['units_as'] == 'cell') {
+      $summary = t('Show units in each cell');
+    }
+    else if ($settings['units_as'] == 'none') {
+      $summary = t('Do not show units');
+    }
+  }
+
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function dimfield_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $form = array();
+
+  if ($display['type'] == 'dimfield_table') {
+    $form['units_as'] = array(
+      '#title' => t('Show units'),
+      '#type' => 'select',
+      '#options' => array(
+        'column' => t('As their own column'),
+        'cell' => t('In each cell'),
+        'none' => t('Do not show units'),
+      ),
+      '#default_value' => $settings['units_as'],
+      '#required' => TRUE,
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function dimfield_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+
+  switch ($display['type']) {
+    case 'dimfield_default':
+      foreach ($items as $delta => $item) {
+        if ($field['settings']['num_dimensions'] == 2) {
+          $output = t('@height @unit by @width @unit', array(
+            '@height' => $item['height'],
+            '@width' => $item['width'],
+            '@unit' => dimfield_units($item['units']),
+          ));
+        }
+        elseif ($field['settings']['num_dimensions'] == 3) {
+          $output = t('@height @unit by @width @unit by @depth @unit', array(
+            '@height' => $item['height'],
+            '@width' => $item['width'],
+            '@depth' => $item['depth'],
+            '@unit' => dimfield_units($item['units']),
+          ));
+        }
+        $element[$delta] = array('#markup' => $output);
+      }
+      break;
+    case 'dimfield_table':
+      $rows = array();
+      foreach ($items as $delta => $item) {
+        $row = array();
+        if ($settings['units_as'] == 'cell') {
+          $row[] = t('@value (%units)', array(
+            '@value' => $item['height'],
+            '%units' => dimfield_units($item['units']),
+          ));
+          $row[] = t('@value (%units)', array(
+            '@value' => $item['width'],
+            '%units' => dimfield_units($item['units']),
+          ));
+        }
+        else {
+          $row[] = $item['height'];
+          $row[] = $item['width'];
+        }
+        if ($field['settings']['num_dimensions'] == 3) {
+          if ($settings['units_as'] == 'cell') {
+            $row[] = t('@value (%units)', array(
+              '@value' => $item['depth'],
+              '%units' => dimfield_units($item['units']),
+            ));
+          }
+          else {
+            $row[] = $item['depth'];
+          }
+        }
+        if ($settings['units_as'] == 'column') {
+          $row[] = dimfield_units($item['units']);
+        }
+        $rows[] = $row;
+      }
+
+      $header = array(t('Height'), t('Width'));
+      if ($field['settings']['num_dimensions'] == 3) {
+        $header[] = t('Depth');
+      }
+      if ($settings['units_as'] == 'column') {
+        $header[] = t('Units');
+      }
+
+      $element = array(
+        '#theme' => 'table',
+        '#rows' => $rows,
+        '#header' => $header,
+      );
+      break;
+  }
+
+  return $element;
+}
 
 
 /**
- * Central registry of th units we support.
+ * Central registry of the units we support.
  */
 function dimfield_units($unit = NULL) {
   static $units;
@@ -306,3 +498,4 @@ function dimfield_units($unit = NULL) {
 
   return $units;
 }
+

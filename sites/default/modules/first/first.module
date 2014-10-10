@@ -72,7 +72,6 @@ function first_block_view($block_name = '') {
       'subject' => t('Drupal 7 Module Development'),
       'content' => $output,
     );
-
     return $block;
   }
 }
