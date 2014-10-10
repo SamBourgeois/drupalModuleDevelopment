@@ -1,0 +1,5 @@
+name = Member Count
+description = Provides a block that shows the number of members.
+package = Drupal 7 Development
+core = 7.x
+files[] = membercount.module
