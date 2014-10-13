@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Use this module to learn about Drupal's menu system.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function menufun_menu() {
+  $items['menufun'] = array(
+    'title' => 'Greeting',
+    'title callback' => 'menufun_title',
+    'description' => 'A salutation.',
+    'page callback' => 'menufun_greeting',
+    'file' => 'menufun.greeting.inc',
+    'page arguments' => array('Jane', 'Doe'),
+    'access callback' => 'user_access',
+    'access arguments' => array('receive greeting'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => '-1',
+  );
+  $items['menufun/farewell'] = array(
+    'title' => 'Farewell',
+    'page callback' => 'menufun_farewell',
+    'file' => 'menufun.greeting.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array('receive greeting'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['menufun/%a_zoo_animal'] = array(
+    'title' => 'Hi',
+    'page callback' => 'menufun_hello',
+    'file' => 'menufun.greeting.inc',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission()
+ */
+function menufun_permission() {
+  return array(
+    'receive greeting' => array(
+      'title' => t('Receive a greeting'),
+      'description' => t('Allow users receive a greeting message'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu_link_alter().
+ */
+function menufun_menu_link_alter(&$item) {
+// Hide the Create content link.
+  if ($item['link_path'] == 'node/add') {
+    $item['hidden'] = 1;
+  }
+}

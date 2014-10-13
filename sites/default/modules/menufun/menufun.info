@@ -1,0 +1,6 @@
+name = Menu Fun
+description = Learning about the menu system.
+package = Drupal 7 Development
+core = 7.x
+files[] = menufun.module
+files[] = menufun.greeting.inc
