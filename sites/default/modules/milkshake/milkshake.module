@@ -59,3 +59,4 @@ function milkshake_add() {
 function milkshake_list($type) {
   return t('List @type flavors', array('@type' => $type));
 }
+
