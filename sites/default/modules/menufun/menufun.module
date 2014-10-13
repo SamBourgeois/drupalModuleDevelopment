@@ -53,12 +53,3 @@ function menufun_permission() {
   );
 }
 
-/**
- * Implements hook_menu_link_alter().
- */
-function menufun_menu_link_alter(&$item) {
-// Hide the Create content link.
-  if ($item['link_path'] == 'node/add') {
-    $item['hidden'] = 1;
-  }
-}
