@@ -34,10 +34,37 @@ function membercount_block_info() {
 function membercount_block_view($name) {
 
   if ($name == 'count_members') {
+    global $user;
+    
     $count = db_query('SELECT COUNT(uid) - 1 FROM {users}')->fetchField();
 
-    $content = format_plural($count, 'This site has 1 user.', 'This site has @count users.');
+    $lastlogin = db_select('users', 'u')
+        ->fields('u', array('uid', 'name'))
+        ->orderBy('login', 'DESC')
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+    $userpath = 'user/' . $lastlogin->uid;
 
+    $lastcreated = db_select('users', 'u')
+        ->fields('u', array('uid', 'name'))
+        ->orderBy('created', 'DESC')
+        ->range(0, 2)
+        ->execute();
+
+    $lastusers = array();
+    while (
+    $record = $lastcreated->fetchAssoc()) {
+      $lastusers[] = l($record['name'], 'user/' . $record['uid']);
+    }
+    $lastusers = rtrim(implode(', ', $lastusers), ', ');
+
+    $content = format_plural($count, 'This site has 1 user.', 'This site has @count users.');
+    $content .= '<br> ' . l($lastlogin->name, $userpath) . ' logged in last.';
+    $content .= '<br>' . $lastusers . ' have last been registered.';
+    if (user_is_logged_in()) {
+      $content .= '<br>' . l('My account', 'user/' . $user->uid) . ', ' . l('logout', 'user/logout');
+    }
     $block = array(
       'subject' => t('Members'),
       'content' => $content,

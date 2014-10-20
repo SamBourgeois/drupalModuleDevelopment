@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * @file
+ * Enables searching of non-Drupal content.
+ *//**
+ * Implements hook_search_info()
+ */
+function legacysearch_search_info() {
+  return array(
+    'title' => 'Tech Notes',
+  );
+}
+
+/**
+ * Implements hook_search_reset()
+ */
+function legacysearch_search_reset() {
+  variable_del('legacysearch_cron_last_change');
+  variable_del('legacysearch_cron_last_id');
+  return;
+}
+
+/**
+ * Shutdown function to make sure we remember the last element processed.
+ */
+function legacysearch_update_shutdown() {
+  global $last_change, $last_id;
+  if ($last_change && $last_id) {
+    variable_set('legacysearch_cron_last_change', $last_change);
+    variable_set('legacysearch_cron_last_id', $last_id);
+  }
+}
+
+/**
+ * Implements hook_update_index().
+ */
+function legacysearch_update_index() {
+  global $last_change, $last_id;
+  register_shutdown_function('legacysearch_update_shutdown');
+  $last_id = variable_get('legacysearch_cron_last_id', 0);
+  $last_change = variable_get('legacysearch_cron_last_change', 0);
+  db_set_active('legacy');
+  $result = db_query("SELECT id, title, note, last_modified FROM {technote} WHERE id >„z
+:last_id OR last_modified > :last_change", array(':last_id' => $last_id, ':last_change' => $last_change));
+  db_set_active('default');
+  foreach ($result as $data) {
+    $last_change = $data->last_modified;
+    $last_id = $data->id;
+    $text = '<h1>' . check_plain($data->title) . '</h1>' . $data->note;
+    search_index($data->id, 'technote', $text);
+    variable_set('legacysearch_cron_last', $data->last_modified);
+    variable_set('legacysearch_cron_last_id', $data->id);
+  }
+}
+
+/**
+ * Implements hook_search_execute().
+ */
+function legacysearch_search_execute($keys = NULL) {
+// Set up a mock URL to embed in the link so that when the user clicks it takes them to the legacy site
+  $legacy_url = 'http://technotes.example.com';
+// Set up and execute the query
+  $query = db_select('search_index', 'i')->extend('SearchQuery')->extend('PagerDefault');
+  $query->join('technote', 't', 't.id = i.sid');
+  $query
+      ->searchExpression($keys, 'technote');
+// If there weren't any results then return a blank result set
+  if (!$query->executeFirstPass()) {
+    return array();
+  }
+// If the first pass did return at least one record then execute the search
+  $found = $query
+      ->limit(10)
+      ->execute();
+// Now create the search results output
+  foreach ($found as $item) {
+// First get the values from the legacy table to display in search results
+    db_set_active('legacy');
+    $note = db_query("SELECT * FROM {technote} where id = :sid", array(':sid' =>
+      $item->sid));
+    db_set_active('default');
+// Format the search results
+    $results[] = array(
+      'link' => url($legacy_url . 'note.pl', array('query' => $item->sid,
+        'absolute' => TRUE)),
+      'type' => t('Note'),
+      'title' => $note->title,
+      'date' => $note->last_modified,
+      'score' => $item->score,
+      'snippet' => search_excerpt($keys, $note->note));
+  }
+  return $results;
+}
